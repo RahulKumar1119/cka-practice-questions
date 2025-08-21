@@ -7,7 +7,10 @@ Configure the HPA to have a minimum of 1 Pod and a maximum of 4 Pods.
 
 Additionally, set the downscale stabilization window to 30 seconds.
 
----
+
+Solution Steps
+
+
 Command Approach (Quick Way)
 
 kubectl autoscale deployment apache-server \
