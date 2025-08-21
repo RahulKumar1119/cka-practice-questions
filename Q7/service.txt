@@ -1,0 +1,66 @@
+Reconfigure the existing Deployment front-end in namespace sp-culator:
+
+Expose port 80/tcp of container nginx.
+
+Create a Service front-end-svc:
+
+Expose container port 80/tcp.
+
+Type should be NodePort to expose pods individually.
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+✅ Step 1: Edit Deployment to expose container port
+
+kubectl -n sp-culator edit deployment front-end
+
+
+Inside the container nginx, add:
+
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+      protocol: TCP
+
+Save and exit.
+
+✅ Step 2: Create Service manifest
+
+Create a YAML file front-end-svc.yaml:
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-end-svc
+  namespace: sp-culator
+spec:
+  selector:
+    app: front-end   # must match labels of Deployment
+  ports:
+  - protocol: TCP
+    port: 80        # service port
+    targetPort: 80  # container port
+    nodePort: 30080 # optional, can let k8s assign
+  type: NodePort
+
+
+Apply it:
+
+kubectl apply -f front-end-svc.yaml
+
+✅ Step 3: Verify
+
+kubectl -n sp-culator get pods -o wide
+kubectl -n sp-culator get svc front-end-svc
+
+
+One-liner alternative
+
+kubectl expose deployment front-end -n sp-culator --name=front-end-svc --port=80 --target-port=80 --type=NodePort
