@@ -1,0 +1,51 @@
+Install Argo CD in the cluster:
+
+Add the official Argo CD Helm repository with the name argo.
+
+The Argo CD CRDs have already been pre-installed in the cluster.
+
+Generate a Helm template of the Argo CD Helm chart version 7.7.3 for the argocd namespace and save it to /argo-helm.yaml.
+
+Configure the chart to not install CRDs.
+
+Install Argo CD using Helm with release name argocd, using the same version (7.7.3) and configuration as used in the template.
+
+Install it in the argocd namespace and configure it to not install CRDs.
+
+You do not need to configure access to the Argo CD server UI.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+# Step 1: Add Argo CD Helm repository
+helm repo add argo https://argoproj.github.io/argo-helm
+
+# Step 2: Update repo
+helm repo update
+
+# Step 3: Create namespace
+kubectl create ns argocd
+
+Search in the repo you already added
+
+helm search repo argo
+
+👉 Output (example):
+
+NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                       
+argo/argo                       1.0.0           v2.12.5         A Helm chart for Argo Workflows                   
+argo/argo-cd                    8.3.0           v3.1.0          A Helm chart for Argo CD, a declarative, GitOps...
+argo/argo-ci                    1.0.0           v1.0.0-alpha2   A Helm chart for Argo-CI                          
+argo/argo-events                2.4.16          v1.9.7          A Helm chart for Argo Events, the event-driven ...
+argo/argo-lite                  0.1.0                           Lighweight workflow engine for Kubernetes         
+argo/argo-rollouts              2.40.3          v1.8.3          A Helm chart for Argo Rollouts               
+
+# Step 4: Generate Helm template (version 7.7.3, without CRDs)
+helm template argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false > ~/argo-helm.yaml
+
+# Step 5: Install using Helm (release name = argocd)
+helm install argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false
+
+
+
