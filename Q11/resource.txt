@@ -28,7 +28,11 @@ Apply 15% Overhead
 
 We’ll reserve ~15% for system components.
 
+expr "1000 *0.85" | bc
+
 CPU available = 1000m × 0.85 = 850m
+
+expr "1968 * 0.85" | bc
 
 Memory available = 1968Mi × 0.85 ≈ 1673Mi
 
