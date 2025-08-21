@@ -1,0 +1,79 @@
+The question presents a scenario where a legacy application needs its logs integrated into Kubernetes' logging system. The task is to:
+
+Update an existing Deployment named synergy-deployment.
+
+Add a new co-located container (a "sidecar") named sidecar to the Pod.
+
+The sidecar container should use the busybox:stable image.
+
+The sidecar container must run the command: /bin/sh -c "tail -n+1 -f /var/log/synergy-deployment.log".
+
+Use a Volume mounted at /var/log to make the log file, synergy-deployment.log, accessible to both the main application container and the new sidecar container.
+
+Do not modify the existing container's specification other than what is required to complete the task.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+This task requires you to modify an existing Kubernetes Deployment to add a sidecar container for log streaming. The solution involves two main steps: defining a shared Volume and adding the new container to the Pod's template.
+
+Step 1: Edit the Deployment
+You will use kubectl edit deployment synergy-deployment to modify the YAML specification of the existing Deployment. This command opens the Deployment's manifest in your default editor.
+
+Step 2: Add the Shared Volume
+Within the Deployment's spec.template.spec, locate the volumes array. If it doesn't exist, create it. Add a new volume definition. A simple emptyDir volume is perfect for this temporary, shared log file.
+
+# ... inside spec.template.spec
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+
+Step 3: Mount the Volume in Both Containers
+
+Now, you need to add a volumeMounts section to the specification of both the original container and the new sidecar container.
+
+    1. For the existing container: Find the containers array, locate the original container (likely named synergy-app), and add the volumeMounts section to it. The mount path should be /var/log.
+
+# ... inside containers array, for the existing container
+  volumeMounts:
+  - name: log-volume
+    mountPath: /var/log
+
+    2. For the new sidecar container: Under the same containers array, add the new container specification. This container should be named sidecar, use the busybox:stable image, and have its own volumeMounts and command sections.
+
+# ... inside containers array, for the new container
+- name: sidecar
+  image: busybox:stable
+  command: ["/bin/sh", "-c", "tail -n+1 -f /var/log/synergy-deployment.log"]
+  volumeMounts:
+  - name: log-volume
+    mountPath: /var/log
+
+    3. After editing the manifest, save the changes and exit the editor. kubectl will automatically apply the updates. The Deployment will then create new Pods with the updated configuration.
+
+
+Final YAML Structure
+
+The final spec.template.spec block of your Deployment's YAML should look similar to this:
+
+
+# ...
+spec:
+  template:
+    spec:
+      containers:
+      - name: synergy-app # (example name of the main container)
+        image: your-app-image # (existing app image)
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log
+      - name: sidecar
+        image: busybox:stable
+        command: ["/bin/sh", "-c", "tail -n+1 -f /var/log/synergy-deployment.log"]
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log
+      volumes:
+      - name: log-volume
+        emptyDir: {}
