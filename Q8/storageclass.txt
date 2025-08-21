@@ -1,0 +1,46 @@
+Create a new StorageClass named low-latency that uses the existing provisioner rancher.io/local-path.
+
+Set the VolumeBindingMode to WaitForFirstConsumer for this new StorageClass.
+
+Make the new low-latency StorageClass the default for the cluster.
+
+Do not modify any existing Deployments or PersistentVolumeClaims as part of this process.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+Step 1: Create the StorageClass
+
+
+First, you need to create a YAML file for the StorageClass. Let's call it low-latency-sc.yaml. This file will define the StorageClass named low-latency and specify the provisioner.
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: low-latency
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+
+Step 2: Apply the YAML
+
+Apply the YAML file to create the StorageClass using the kubectl apply command.
+
+kubectl apply -f low-latency-sc.yaml
+
+You can verify that the StorageClass has been created by running:
+
+kubectl get storageclass
+
+Step 3: Make it the Default StorageClass
+
+To make the low-latency StorageClass the default for the cluster, you must first ensure no other StorageClass is marked as default. You can check the current default by looking for the (default) annotation in the output of kubectl get storageclass.
+
+If another StorageClass is default, you'll need to remove its default annotation. To do this, you can edit the existing StorageClass and change the is-default-class annotation to false.
+
+Then, you must patch the new low-latency StorageClass to mark it as the default.
+
+kubectl patch storageclass low-latency -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+You can confirm the change by running kubectl get storageclass again. The low-latency StorageClass should now be marked as (default).
+
