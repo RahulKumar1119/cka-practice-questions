@@ -9,7 +9,6 @@ Expose container port 80/tcp.
 Type should be NodePort to expose pods individually.
 
 
-
 --------------------------------------------------------------------------------------------------------------------------
 
 Solution Steps
