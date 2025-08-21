@@ -1,0 +1,48 @@
+create a PriorityClass named high-priority with a value = (highest existing user-defined priority class value - 1).
+
+Patch the existing Deployment busybox-logger in namespace priority to use this PriorityClass.
+
+Ensure rollout works.
+
+Other Pods in namespace may be evicted.
+
+Do not modify other Deployments.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+Step 1: Check existing PriorityClasses
+
+kubectl get priorityclass
+
+controlplane:~$ kubectl get priorityclass
+NAME                      VALUE        GLOBAL-DEFAULT   AGE    PREEMPTIONPOLICY
+high-priority             1000000      false            3s     PreemptLowerPriority
+system-cluster-critical   2000000000   false            2d3h   PreemptLowerPriority
+system-node-critical      2000001000   false            2d3h   PreemptLowerPriority
+
+👉 Highest user-defined = 1000000 → our value = 999999.
+
+Step 2: Create PriorityClass
+
+Create a YAML file:
+
+cat <<EOF | kubectl apply -f -
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 999999
+preemptionPolicy: PreemptLowerPriority
+globalDefault: false
+description: "High priority class for user workloads"
+EOF
+
+Step 3: Patch Deployment
+
+kubectl -n priority patch deployment busybox-logger --type=merge -p '{"spec":{"template":{"spec":{"priorityClassName":"high-priority"}}}}'
+
+Step 4: Verify Rollout
+
+kubectl -n priority rollout status deployment busybox-logger
