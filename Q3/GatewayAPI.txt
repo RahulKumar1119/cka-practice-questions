@@ -1,0 +1,173 @@
+You are tasked with migrating an existing web application from Ingress to the Gateway API while maintaining HTTPS access.
+
+    A GatewayClass named nginx is already installed in the cluster.
+
+    An existing Ingress resource named web exposes a Deployment via a Service named web-svc, using TLS with a Secret named web-tls.
+
+You must:
+
+1. Create a Gateway named web-gateway with hostname gateway.web.k8s.local that maintains the existing TLS configuration.
+
+2. Create an HTTPRoute named web-route with hostname gateway.web.k8s.local that maintains the same routing rules as the current Ingress (web).
+
+3. Test access using:
+
+curl -k https://gateway.web.k8s.local
+
+Finally, delete the old Ingress resource named web.
+
+⚡ Note: The Deployment and Service for web already exist in the cluster.
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+1. Create a TLS Secret (web-tls)
+
+For exam practice, you can create a self-signed certificate and put it into Kubernetes.
+
+Generate certs locally:
+
+# Generate a private key
+openssl genrsa -out web.key 2048
+
+# Generate a self-signed certificate (valid for 365 days)
+openssl req -x509 -new -nodes -key web.key -subj "/CN=gateway.web.k8s.local" -days 365 -out web.crt
+
+Create Kubernetes secret:
+
+kubectl create secret tls web-tls \
+  --cert=web.crt \
+  --key=web.key
+
+
+2. Deployment (web)
+
+This runs a simple NGINX app.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          ports:
+            - containerPort: 80
+
+
+3. Service (web-svc)
+
+Exposes the Deployment inside the cluster.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+spec:
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+
+4. Existing Ingress (before migration)
+
+This is what you start with.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gateway.web.k8s.local
+      secretName: web-tls     # TLS secret we just created
+  rules:
+    - host: gateway.web.k8s.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-svc
+                port:
+                  number: 80
+
+
+5. Migrated Gateway + HTTPRoute (after migration)
+
+Gateway
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: web-gateway
+spec:
+  gatewayClassName: nginx
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "gateway.web.k8s.local"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: web-tls
+
+
+HTTPRoute
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+spec:
+  parentRefs:
+    - name: web-gateway
+  hostnames:
+    - "gateway.web.k8s.local"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: web-svc
+          port: 80
+
+6. Validation
+
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml   # old way
+
+# After migration:
+kubectl apply -f gateway.yaml
+kubectl apply -f httproute.yaml
+
+# Test HTTPS
+curl -k https://gateway.web.k8s.local
+
+7. Cleanup (delete old Ingress)
+
+kubectl delete ingress web
+
