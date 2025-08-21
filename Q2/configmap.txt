@@ -11,6 +11,9 @@ curl --tls-max 1.2 https://web.k8s.local
 
 As TLSv1.2 should not be allowed anymore, the above command should fail.
 
+------------------------------------------------------------------------------------------------------------------
+
+
 Solution Steps
 
 1. Check the ConfigMap
