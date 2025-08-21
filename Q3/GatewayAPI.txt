@@ -130,8 +130,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
-            name: web-tls
+        - kind: Secret
+          name: web-tls
 
 
 HTTPRoute
