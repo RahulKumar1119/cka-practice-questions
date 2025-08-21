@@ -1,0 +1,68 @@
+Create a new HorizontalPodAutoscaler (HPA) named apache-server in the autoscale namespace.
+This HPA must target the existing Deployment called apache-server in the same namespace.
+
+Set the HPA to target 50% CPU usage per Pod.
+
+Configure the HPA to have a minimum of 1 Pod and a maximum of 4 Pods.
+
+Additionally, set the downscale stabilization window to 30 seconds
+
+---
+Command Approach (Quick Way)
+
+kubectl autoscale deployment apache-server \
+  --cpu-percent=50 \
+  --min=1 \
+  --max=4 \
+  -n autoscale \
+  --name=apache-server
+
+
+Then edit the HPA to add downscale stabilization:
+
+kubectl edit hpa apache-server -n autoscale
+
+
+Add under spec.behavior:
+
+spec:
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+
+
+Final YAML Manifest (Best for Exam)
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: apache-server
+  namespace: autoscale
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: apache-server
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+
+
