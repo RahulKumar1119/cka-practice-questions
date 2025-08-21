@@ -1,0 +1,74 @@
+Install and configure a Container Network Interface (CNI) of your choice that meets the specified requirements. 
+You may choose from one of the following options:
+
+Flannel using the manifest:
+
+https://github.com/flannel-io/flannel/releases/download/v0.26.1/kube-flannel.yml
+
+
+Calico using the manifest:
+
+https://raw.githubusercontent.com/projectcalico/calico/v3.29.2/manifests/tigera-operator.yaml
+
+Requirements:
+
+Pods must be able to communicate with each other.
+
+The CNI must support NetworkPolicy enforcement.
+
+Install the CNI using manifest files only (do not use Helm).
+
+Verify that the selected CNI is properly installed and configured in the cluster.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+1. Download and Apply Calico Manifest
+
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.2/manifests/tigera-operator.yaml
+
+
+2. Install Calico Custom Resources
+
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.2/manifests/custom-resources.yaml
+
+3. Verify Installation
+
+Check pods in calico-system namespace:
+
+kubectl get pods -n calico-system
+
+Expected: all pods should be in Running state.
+
+4. Test Pod-to-Pod Communication
+
+Create a test namespace and deploy nginx + busybox:
+
+kubectl create ns test-cni
+kubectl run nginx --image=nginx -n test-cni
+kubectl run busybox --image=busybox:1.28 -it --rm -n test-cni -- /bin/sh
+
+Inside busybox, ping nginx pod IP:
+
+ping 192.168.196.129
+
+5. Test NetworkPolicy Enforcement
+
+Create a deny-all policy:
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: test-cni
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+Apply it:
+
+kubectl apply -f deny-all.yaml
+
+Now, busybox won’t be able to connect to nginx ✅ (NetworkPolicy works).
