@@ -1,0 +1,73 @@
+The task is to adjust the resource requests for a WordPress application with 3 replicas in the relative-fawn namespace.
+
+Here are the specific instructions:
+
+The total node resources are CPU: 1 core and Memory: 2015360 Ki.
+
+You need to divide these resources evenly among the 3 pods.
+
+The application consists of both containers and init containers, and they should have the exact same requests.
+
+You are not required to change any resource limits.
+
+A helpful hint is provided: you may temporarily scale the Deployment to 0 replicas while making the changes.
+
+After the updates, you must confirm that the WordPress Deployment has 3 replicas and all Pods are running and ready.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+Node resources
+
+CPU: 1000m (1 core)
+
+Memory: 2015360 Ki ≈ 1968Mi
+
+Apply 15% Overhead
+
+We’ll reserve ~15% for system components.
+
+CPU available = 1000m × 0.85 = 850m
+
+Memory available = 1968Mi × 0.85 ≈ 1673Mi
+
+Divide among 3 replicas
+
+Per Pod allocation = (available ÷ 3):
+
+CPU per pod = 850m ÷ 3 ≈ 283m
+
+Memory per pod = 1673Mi ÷ 3 ≈ 558Mi
+
+So each container (including init containers) gets:
+
+resources:
+  requests:
+    cpu: "283m"
+    memory: "558Mi"
+
+Scale down Deployment
+
+kubectl -n relative-fawn scale deploy wordpress --replicas=0
+
+
+Edit Deployment
+
+kubectl -n relative-fawn edit deploy wordpress
+
+Under both containers and initContainers set:
+
+resources:
+  requests:
+    cpu: "283m"
+    memory: "558Mi"
+
+Scale back to 3
+
+kubectl -n relative-fawn scale deploy wordpress --replicas=3
+
+Verify
+
+kubectl -n relative-fawn rollout status deploy wordpress
+kubectl -n relative-fawn get pods -o wide
