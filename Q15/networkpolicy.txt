@@ -39,7 +39,7 @@ spec:
     - from:
       - namespaceSelector:
           matchLabels:
-            name: frontend
+            kubernetes.io/metadata.name: frontend
       - podSelector:
           matchLabels:
-            app: specific-frontend-pod
+            app: frontend
