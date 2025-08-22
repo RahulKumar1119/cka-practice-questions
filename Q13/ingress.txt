@@ -1,0 +1,53 @@
+The task is to:
+
+Create a new Ingress resource named echo in the echo-sound namespace.
+
+Expose the Service echoserver-service on http://example.org/echo using Service port 8080.
+
+The question also provides a command to check the availability of the service, curl -o /dev/null -s -w "%{http_code}\n" http://example.org/echo, which is expected to return 200.
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+
+Step 1: Create the Ingress Resource
+
+Next, create a YAML file for the Ingress. You can name it echo-ingress.yaml. 
+The Ingress object will have a rule that directs traffic with the host example.org and path /echo to the echoserver-service on port 8080.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo
+  namespace: echo-sound
+spec:
+  rules:
+  - host: example.org
+    http:
+      paths:
+      - path: /echo
+        pathType: Prefix
+        backend:
+          service:
+            name: echoserver-service
+            port:
+              number: 8080
+
+
+Apply the Ingress file to the cluster using kubectl:
+
+kubectl apply -f echo-ingress.yaml
+
+Step 2: Verify the Ingress
+
+Finally, verify that the Ingress has been created correctly by using the kubectl get command:
+
+kubectl get ingress -n echo-sound
+
+
+Step 3: Output
+
+To test the functionality, you would typically follow the prompt's provided curl command to ensure the service is reachable and returns an HTTP status code of 200.
+
