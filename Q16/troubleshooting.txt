@@ -1,0 +1,52 @@
+Fix a broken single-node Kubernetes cluster that was migrated to a new machine. The cluster was provisioned with kubeadm and uses an external etcd server.
+
+Task:
+
+Identify and investigate the broken cluster components.
+
+Fix the configuration of all broken components.
+
+Restart necessary services and components.
+
+Ensure the cluster, node, and all pods are in a Ready state.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+1.  Fix the Configuration
+
+The kube-apiserver static pod manifest contains the configuration for connecting to etcd. 
+
+You need to edit this file to reflect the new IP address of the external etcd server.
+
+The manifest files for static pods are typically located in /etc/kubernetes/manifests/.
+
+sudo vi /etc/kubernetes/manifests/kube-apiserver.yaml
+
+Update the --etcd-servers argument:
+
+In the spec.containers.args section of the YAML file, find the line that specifies the etcd servers.
+
+- --etcd-servers=https://<old-etcd-server-ip>:2379
+
+Change the IP address to the new, correct IP of the external etcd server.
+
+- --etcd-servers=https://<new-etcd-server-ip>:2379
+
+Verify certificates:
+
+Also, ensure the --etcd-cafile, --etcd-certfile, and --etcd-keyfile arguments correctly point to the certificates required for secure communication with etcd.
+
+These certificates are usually located in /etc/kubernetes/pki/.
+
+2.  Restart Services
+
+Since the control plane components are run as static pods, the kubelet service will automatically detect the changes you made to the kube-apiserver.yaml file and restart the pod. There is no need for a manual restart of the kubelet service.
+
+3.  Verify the Cluster State
+
+After a few moments, the kubelet should have successfully restarted the kube-apiserver pod with the updated configuration. Now, you can verify that the cluster is healthy.
+
+kubectl get nodes
+
