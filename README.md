@@ -27,6 +27,10 @@ Configuring NetworkPolicies & HPAs
 
 Managing Storage with PVCs & StorageClasses
 
+Installing Helm Chart
+
+Configuring Ingress, GatewayClass and HTTPRoute
+
 Fixing broken clusters & troubleshooting pods/nodes
 
 🔹 Who is this for?
