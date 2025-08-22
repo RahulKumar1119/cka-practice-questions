@@ -31,7 +31,7 @@ Installing Helm Chart
 
 Configuring Ingress, GatewayClass and HTTPRoute
 
-Fixing broken clusters & troubleshooting pods/nodes
+Fixing broken clusters & troubleshooting pods/nodes etc. 
 
 🔹 Who is this for?
 
