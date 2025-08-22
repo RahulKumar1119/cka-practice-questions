@@ -1,0 +1,91 @@
+A user accidentally deleted the MariaDB Deployment in the mariadb namespace, which was configured with persistent storage.
+Your responsibility is to re-establish the Deployment while ensuring data is preserved by reusing the available PersistentVolume.
+
+The specific tasks are:
+
+A PersistentVolume (PV) already exists and is retained for reuse.
+
+Create a PersistentVolumeClaim (PVC) named mariadb in the mariadb namespace with the following specifications:
+
+Access mode: ReadWriteOnce
+
+Storage: 250Mi
+
+Edit the MariaDB Deployment file located at ~/mariadb-deploy.yaml to use the PVC created in the previous step.
+
+Apply the updated Deployment file to the cluster.
+
+Ensure the MariaDB Deployment is running and Stable.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+Step 1: Create the PersistentVolumeClaim (PVC)
+
+First, create a YAML file for the PVC. You can name it mariadb-pvc.yaml.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb
+  namespace: mariadb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 250Mi
+
+Apply this file to the cluster using the following command:
+
+kubectl apply -f mariadb-pvc.yaml
+
+The PVC will then bind to the existing PersistentVolume that was retained.
+
+Step 2: Edit the MariaDB Deployment File
+
+Next, you'll need to modify the ~/mariadb-deploy.yaml file to use the newly created PVC. You'll add a volumes section to the Deployment and a corresponding volumeMounts section to the container. 
+The volumeMounts will specify where the persistent storage should be mounted inside the MariaDB container (typically /var/lib/mysql).
+
+Here's an example of the relevant parts of the updated mariadb-deploy.yaml file:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+  namespace: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /var/lib/mysql
+
+Step 3: Apply the Updated Deployment
+
+After saving the changes to ~/mariadb-deploy.yaml, apply the updated Deployment to the cluster.
+
+kubectl apply -f ~/mariadb-deploy.yaml
+
+This command will create the new MariaDB Deployment, which will use the PVC and, by extension, the original PersistentVolume, ensuring that the data is preserved.
+
+Step 4: Verify the Deployment Status
+
+Finally, verify that the Deployment is running and stable. You can use the following command to check its status:
+
+kubectl get deployment -n mariadb
