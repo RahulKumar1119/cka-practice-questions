@@ -1,0 +1,45 @@
+The scenario involves a frontend deployment and a backend deployment, located in their respective namespaces (frontend and backend). The task is to establish communication between them.
+
+The instructions are as follows:
+
+Analyze: Inspect the existing frontend and backend deployments to understand their communication requirements.
+
+Apply: From the ~/netpol folder, choose one of the provided NetworkPolicy YAML files to apply.
+
+The chosen NetworkPolicy must:
+
+Allow communication between the frontend and backend deployments.
+
+Be as restrictive as possible (least permissive).
+
+Not delete or change the existing "deny-all" network policies.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+In Kubernetes NetworkPolicy, "least permissive" means you only allow the specific traffic that is absolutely necessary, blocking all other communication by default.
+
+A policy that restricts traffic from a specific pod to another specific pod (rather than an entire namespace) is a more fine-grained and thus even more "least permissive" option. This level of granularity is generally required when a service is extremely sensitive and needs to be isolated even from other services within the same namespace.
+
+Here is an example of a policy that's even more restrictive:
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-specific-frontend-to-backend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: frontend
+      - podSelector:
+          matchLabels:
+            app: specific-frontend-pod
