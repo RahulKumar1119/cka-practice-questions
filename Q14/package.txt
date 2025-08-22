@@ -1,0 +1,59 @@
+The main objective is to prepare a Linux system for Kubernetes using kubeadm. Docker is already installed, and the user needs to configure it.
+
+The specific tasks are:
+
+Set up cri-dockerd:
+
+Install the Debian package ~/cri-dockerd_0.3.9-0.ubuntu-jammy_amd64.deb.
+
+Use dpkg to install the package.
+
+Enable and start the cri-dockerd service.
+
+Configure system parameters:
+
+Set net.bridge.bridge-nf-call-iptables to 1.
+
+Set net.ipv6.conf.all.forwarding to 1.
+
+Set net.ipv4.ip_forward to 1.
+
+Set net.netfilter.nf_conntrack_max to 131072.
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Solution Steps
+
+Step 1: Install cri-dockerd ( https://github.com/Mirantis/cri-dockerd )
+
+First, use the dpkg command to install the provided Debian package.
+
+sudo dpkg -i ~/cri-dockerd_0.3.9-0.ubuntu-jammy_amd64.deb
+
+
+Step 2: Enable and Start the cri-dockerd Service
+
+After installation, you need to enable and start the service to ensure it runs on boot and is active.
+
+sudo systemctl enable cri-dockerd
+sudo systemctl start cri-dockerd
+
+Step 3: Configure System Parameters
+
+These system parameters, often called sysctls, are critical for Kubernetes networking. You can set them temporarily with the sysctl command or make them persistent by adding them to a configuration file.
+
+A. Persistent Configuration
+
+Create or edit a file, for example, /etc/sysctl.d/99-kubernetes-cri.conf, and add the required parameters.
+
+
+cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv6.conf.all.forwarding = 1
+net.ipv4.ip_forward = 1
+net.netfilter.nf_conntrack_max = 131072
+EOF
+
+Apply the changes without rebooting by running:
+
+sudo sysctl --system
