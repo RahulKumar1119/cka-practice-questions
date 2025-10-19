@@ -42,10 +42,10 @@ argo/argo-lite                  0.1.0                           Lighweight workf
 argo/argo-rollouts              2.40.3          v1.8.3          A Helm chart for Argo Rollouts               
 
 # Step 4: Generate Helm template (version 7.7.3, without CRDs)
-helm template argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false > ~/argo-helm.yaml
+helm template argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false --set installCRDs=false > ~/argo-helm.yaml
 
 # Step 5: Install using Helm (release name = argocd)
-helm install argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false
+helm install argocd argo/argo-cd --namespace argocd --version 7.7.3 --set crds.install=false --set installCRDs=false
 
 
 
