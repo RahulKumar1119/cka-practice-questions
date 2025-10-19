@@ -1,4 +1,4 @@
-create a PriorityClass named high-priority with a value = (highest existing user-defined priority class value - 1).
+Create a PriorityClass named high-priority with a value = (highest existing user-defined priority class value - 1).
 
 Patch the existing Deployment busybox-logger in namespace priority to use this PriorityClass.
 
